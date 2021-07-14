@@ -7,6 +7,7 @@ import { withAuth0 } from '@auth0/auth0-react';
 import Button from 'react-bootstrap/Button'
 import { Card, Col, Container, Row } from 'react-bootstrap';
 import BookFormModal from './components/BookFormModal';
+import UpdateBookFormModal from './components/UpdateBookFormModal';
 
 class MyFavoriteBooks extends React.Component {
   constructor(props) {
@@ -15,13 +16,18 @@ class MyFavoriteBooks extends React.Component {
       bestBooks: [],
       show: false,
       showModal: false,
+      showUpdateModal:false,
       server: process.env.REACT_APP_BOOK_DATA,
+updateTitle:'',
+index:0,
+updateDescription:'',
+updateLink:'',
+updateStatus:'',
 
     }
   }
   handleModal = () => {
     this.setState({
-
       showModal: true,
     }
 
@@ -29,8 +35,8 @@ class MyFavoriteBooks extends React.Component {
   }
   handleClose = () => {
     this.setState({
-
       showModal: false,
+      showUpdateModal:false,
     }
 
     )
@@ -54,11 +60,11 @@ class MyFavoriteBooks extends React.Component {
 addBook = async (event) => {
   event.preventDefault();
   const { user } = this.props.auth0;
-  let addTitle = event.target.addTitle.value;
-  let addDescription= event.target.addDescription.value;
-  let addLink=event.target.addLink.value;
-  let addStatus= event.target.addStatus;
-  let email = user.email
+  // let addTitle = event.target.addTitle.value;
+  // let addDescription= event.target.addDescription.value;
+  // let addLink=event.target.addLink.value;
+  // let addStatus= event.target.addStatus;
+  // let email = user.email
   
  const addBookForm = {
   addTitle : event.target.addTitle.value,
@@ -89,7 +95,32 @@ deleteBook = async(index) =>{
 
 
 }
+showUpdateBookForm=(index)=>{
+this.setState({
+  showUpdateModal: true,
+  index:index,
+  updateTitle:this.state.bestBooks[index].name,
+  updateDescription:this.state.bestBooks[index].description,
+  updateLink:this.state.bestBooks[index].img,
+  updateStatus:this.state.bestBooks[index].status,
+  
+})
+}
 
+updateBook = async (event) => {
+  event.preventDefault();
+  let updateBookObject = {
+    updateTitle: event.target.updateTitle.value,
+    updateDescription: event.target.updateDescription.value,
+    updateLink: event.target.updateLink.value,
+    updateStatus: event.target.updateStatus.value,
+    email: this.props.auth0.user.email,
+  }
+  let bestBooks = await axios.put(`${this.state.server}/updateBook/${this.state.index}`,  updateBookObject );
+  this.setState({
+    bestBooks: bestBooks.data
+  })
+}
 
 
   render() {
@@ -121,6 +152,9 @@ deleteBook = async(index) =>{
                         <Button onClick={()=>this.deleteBook(index)} variant="primary" size="lg">
                         Delete
                       </Button>
+                      <Button onClick={()=>this.showUpdateBookForm(index)} variant="primary" size="lg">
+                        Update
+                      </Button>
                       </Card.Body>
                       
                     </Card>
@@ -132,6 +166,14 @@ deleteBook = async(index) =>{
         }
         <BookFormModal addBook={this.addBook} 
           handleClose={this.handleClose} handleModal={this.handleModal} showModal={this.state.showModal} />
+      <UpdateBookFormModal handleClose={this.handleClose} 
+     updateBook={this.updateBook} 
+     handleClose={this.handleClose} 
+     show={this.state.showUpdateModal} 
+     updateTitle= {this.state.updateTitle}
+     updateDescription= {this.state.updateDescription}
+     updateLink= {this.state.updateLink}
+     updateStatus= {this.state.updateStatus} />
       </Jumbotron>
     )
   }
